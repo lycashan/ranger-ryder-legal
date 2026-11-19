@@ -18,7 +18,7 @@
 <div id="view"></div>
 <div id="bar">
   <h1>Billy Ryder's Reinvention Lab</h1>
-  <button id="enter" class="btn">ENTER LAB</button><br>
+  <button id="enter" class="btn">ENTER LAB</button><br><div style="font-size:22px;margin:4px">To leave the lab: pinch once (or pull the trigger).</div>
   <a class="btn small" href="Reinvention_Lab_360.jpg" download="Reinvention_Lab_360.jpg">Save picture</a>
   <div id="msg"></div>
 </div>
@@ -40,6 +40,7 @@ const geo = new THREE.SphereGeometry(50, 96, 64);
 geo.scale(-1, 1, 1); // see the picture from inside
 const tex = new THREE.TextureLoader().load('Reinvention_Lab_360.jpg', () => { window.labLoaded = true; });
 tex.colorSpace = THREE.SRGBColorSpace;
+tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
 const sphere = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({map:tex}));
 sphere.position.set(0, 1.6, 0);
 sphere.rotation.y = -Math.PI/2; // sign in front of you
@@ -71,6 +72,8 @@ document.getElementById('enter').addEventListener('click', async () => {
     await renderer.xr.setSession(session);
     bar.style.display = 'none';
     session.addEventListener('end', () => { bar.style.display = ''; });
+    // one pinch or trigger pull = leave the lab
+    session.addEventListener('select', () => session.end());
   } catch (err) {
     msg.textContent = 'Could not enter: ' + err.message;
   }
