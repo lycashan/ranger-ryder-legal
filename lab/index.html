@@ -19,7 +19,7 @@
 <div id="bar">
   <h1>Billy Ryder's Reinvention Lab</h1>
   <button id="enter" class="btn">ENTER LAB</button><br><div style="font-size:22px;margin:4px">To leave the lab: pinch once (or pull the trigger).</div>
-  <a class="btn small" href="Reinvention_Lab_360_sharp.jpg" download="Reinvention_Lab_360_sharp.jpg">Save picture</a>
+  <a class="btn small" href="Reinvention_Lab2_360_sharp.jpg" download="Reinvention_Lab2_360_sharp.jpg">Save picture</a>
   <div id="msg"></div>
 </div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
@@ -38,7 +38,7 @@ camera.position.set(0, 1.6, 0);
 
 const geo = new THREE.SphereGeometry(50, 96, 64);
 geo.scale(-1, 1, 1); // see the picture from inside
-const tex = new THREE.TextureLoader().load('Reinvention_Lab_360_sharp.jpg', () => { window.labLoaded = true; });
+const tex = new THREE.TextureLoader().load('Reinvention_Lab2_360_sharp.jpg', () => { window.labLoaded = true; });
 tex.colorSpace = THREE.SRGBColorSpace;
 tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
 const sphere = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({map:tex}));
@@ -80,6 +80,8 @@ document.getElementById('enter').addEventListener('click', async () => {
 });
 
 renderer.setAnimationLoop(() => {
+  // keep the room centered on your head, so you never float above or sink below the floor
+  if (renderer.xr.isPresenting) sphere.position.copy(renderer.xr.getCamera().position);
   if (!renderer.xr.isPresenting) {
     const phi = THREE.MathUtils.degToRad(90 - lat), th = THREE.MathUtils.degToRad(lon);
     camera.lookAt(camera.position.x + Math.sin(phi)*Math.cos(th),
