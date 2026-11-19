@@ -33,10 +33,22 @@ renderer.xr.enabled = true;
 document.getElementById('view').appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.01, 100);
 camera.position.set(0, 1.6, 0);
 
-const geo = new THREE.SphereGeometry(50, 96, 64);
+// Shape the picture like a real room: floor 1.6 m below your eyes, ceiling 1.4 m above, walls about 3 m away.
+const EYE = 1.6, CEIL = 1.4, WALL = 3.0;
+const geo = new THREE.SphereGeometry(1, 192, 128);
+const pos = geo.attributes.position, v = new THREE.Vector3();
+for (let i = 0; i < pos.count; i++) {
+  v.fromBufferAttribute(pos, i).normalize();
+  let d = WALL;
+  if (v.y < -1e-4) d = Math.min(d, EYE / -v.y);
+  if (v.y > 1e-4) d = Math.min(d, CEIL / v.y);
+  v.multiplyScalar(d);
+  pos.setXYZ(i, v.x, v.y, v.z);
+}
+geo.computeBoundingSphere();
 geo.scale(-1, 1, 1); // see the picture from inside
 const tex = new THREE.TextureLoader().load('Reinvention_Lab2_360_sharp.jpg', () => { window.labLoaded = true; });
 tex.colorSpace = THREE.SRGBColorSpace;
@@ -80,8 +92,6 @@ document.getElementById('enter').addEventListener('click', async () => {
 });
 
 renderer.setAnimationLoop(() => {
-  // keep the room centered on your head, so you never float above or sink below the floor
-  if (renderer.xr.isPresenting) sphere.position.copy(renderer.xr.getCamera().position);
   if (!renderer.xr.isPresenting) {
     const phi = THREE.MathUtils.degToRad(90 - lat), th = THREE.MathUtils.degToRad(lon);
     camera.lookAt(camera.position.x + Math.sin(phi)*Math.cos(th),
