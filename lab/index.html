@@ -70,7 +70,10 @@ const geo = roomGeometry(size);
 const ROOMS = { studio: 'Virtual_Creativity_Studio_360_sharp.jpg', lab: 'Reinvention_Lab2_360_sharp.jpg' };
 let room = 'studio';
 try { room = localStorage.getItem('labRoom') || 'studio'; } catch (e) {}
+const Q = new URLSearchParams(location.search);
+if (Q.get('room')) room = Q.get('room');
 if (!ROOMS[room]) room = 'studio';
+if (Q.get('bg') === '1') document.getElementById('bar').style.display = 'none'; // background mode: just the room
 const loader = new THREE.TextureLoader();
 const tex = loader.load(ROOMS[room], () => { window.labLoaded = true; });
 tex.colorSpace = THREE.SRGBColorSpace;
