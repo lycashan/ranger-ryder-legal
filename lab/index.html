@@ -66,6 +66,7 @@ function roomGeometry(size) {
 let size = 'cozy';
 try { size = localStorage.getItem('labSize') || 'cozy'; } catch (e) {}
 if (!SIZES[size]) size = 'cozy';
+if (new URLSearchParams(location.search).get('bg') === '1') size = 'large'; // flat screen: show the picture unsqueezed
 const geo = roomGeometry(size);
 const ROOMS = { studio: 'Virtual_Creativity_Studio_360_sharp.jpg', lab: 'Reinvention_Lab2_360_sharp.jpg' };
 let room = 'studio';
