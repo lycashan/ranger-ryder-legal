@@ -40,9 +40,9 @@ camera.position.set(0, 1.6, 0);
 
 // Shape the picture like a real room: floor at your real standing height, walls and ceiling at the chosen room size.
 const EYE = 1.6;
-const SIZES = { cozy: [1.8, 0.9], medium: [2.4, 1.2], large: [3.0, 1.4] }; // [wall distance, ceiling above eyes] in meters
+const SIZES = { cozy: [1.8, 0.9, 62], medium: [2.4, 1.2, 75], large: [3.0, 1.4, 90] }; // [wall distance m, ceiling above eyes m, picture height in degrees above/below eye level]
 function roomGeometry(size) {
-  const [WALL, CEIL] = SIZES[size];
+  const [WALL, CEIL, SPAN] = SIZES[size];
   const g = new THREE.SphereGeometry(1, 192, 128);
   const pos = g.attributes.position, v = new THREE.Vector3();
   for (let i = 0; i < pos.count; i++) {
@@ -52,6 +52,12 @@ function roomGeometry(size) {
     if (v.y > 1e-4) d = Math.min(d, CEIL / v.y);
     v.multiplyScalar(d);
     pos.setXYZ(i, v.x, v.y, v.z);
+  }
+  // AI pictures are painted taller than a true 360 photo; squeeze them back to real proportions
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) {
+    const lat = (uv.getY(i) - 0.5) * 180;
+    uv.setY(i, Math.min(0.999, Math.max(0.001, 0.5 + lat / (2 * SPAN))));
   }
   g.computeBoundingSphere();
   g.scale(-1, 1, 1); // see the picture from inside
