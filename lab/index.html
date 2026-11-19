@@ -11,6 +11,7 @@
   h1{font-size:26px;margin:0 0 12px}
   .btn{display:inline-block;background:#c9a24a;color:#120c08;font-size:40px;font-weight:bold;padding:24px 70px;border-radius:16px;text-decoration:none;border:none;cursor:pointer;margin:6px}
   .small{font-size:20px;padding:12px 30px;background:#5a4422;color:#f3e2c0}
+  .rm.on{background:#c9a24a;color:#120c08}
   .sz.on{background:#c9a24a;color:#120c08}
   #msg{font-size:22px;margin-top:10px;min-height:28px}
 </style>
@@ -19,7 +20,7 @@
 <div id="view"></div>
 <div id="bar">
   <h1>Billy Ryder's Reinvention Lab</h1>
-  <button id="enter" class="btn">ENTER LAB</button><br><div id="sizes" style="margin:6px">Room size: <button class="btn small sz" data-s="cozy">Cozy</button><button class="btn small sz" data-s="medium">Medium</button><button class="btn small sz" data-s="large">Large</button></div><div style="font-size:22px;margin:4px">To leave the lab: pinch once (or pull the trigger).</div>
+  <button id="enter" class="btn">ENTER LAB</button><br><div style="margin:6px">Room: <button class="btn small rm" data-r="studio">Studio</button><button class="btn small rm" data-r="lab">Big Lab</button></div><div id="sizes" style="margin:6px">Room size: <button class="btn small sz" data-s="cozy">Cozy</button><button class="btn small sz" data-s="medium">Medium</button><button class="btn small sz" data-s="large">Large</button></div><div style="font-size:22px;margin:4px">To leave the lab: pinch once (or pull the trigger).</div>
   <a class="btn small" href="Reinvention_Lab2_360_sharp.jpg" download="Reinvention_Lab2_360_sharp.jpg">Save picture</a>
   <div id="msg"></div>
 </div>
@@ -60,7 +61,12 @@ let size = 'cozy';
 try { size = localStorage.getItem('labSize') || 'cozy'; } catch (e) {}
 if (!SIZES[size]) size = 'cozy';
 const geo = roomGeometry(size);
-const tex = new THREE.TextureLoader().load('Reinvention_Lab2_360_sharp.jpg', () => { window.labLoaded = true; });
+const ROOMS = { studio: 'Virtual_Creativity_Studio_360_sharp.jpg', lab: 'Reinvention_Lab2_360_sharp.jpg' };
+let room = 'studio';
+try { room = localStorage.getItem('labRoom') || 'studio'; } catch (e) {}
+if (!ROOMS[room]) room = 'studio';
+const loader = new THREE.TextureLoader();
+const tex = loader.load(ROOMS[room], () => { window.labLoaded = true; });
 tex.colorSpace = THREE.SRGBColorSpace;
 tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
 const sphere = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({map:tex}));
@@ -75,6 +81,17 @@ document.querySelectorAll('.sz').forEach(b => b.addEventListener('click', () => 
   sphere.geometry.dispose(); sphere.geometry = roomGeometry(size); showSize();
 }));
 showSize();
+function showRoom() { document.querySelectorAll('.rm').forEach(b => b.classList.toggle('on', b.dataset.r === room)); }
+document.querySelectorAll('.rm').forEach(b => b.addEventListener('click', () => {
+  room = b.dataset.r;
+  try { localStorage.setItem('labRoom', room); } catch (e) {}
+  loader.load(ROOMS[room], t => {
+    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    const old = sphere.material.map; sphere.material.map = t; sphere.material.needsUpdate = true; old.dispose();
+  });
+  showRoom();
+}));
+showRoom();
 
 // look around with mouse or finger (outside the headset)
 let lon = -90, lat = 0, down = false, sx = 0, sy = 0, slon = 0, slat = 0;
