@@ -46,7 +46,7 @@ sphere.rotation.y = -Math.PI/2; // sign in front of you
 scene.add(sphere);
 
 // look around with mouse or finger (outside the headset)
-let lon = 0, lat = 0, down = false, sx = 0, sy = 0, slon = 0, slat = 0;
+let lon = -90, lat = 0, down = false, sx = 0, sy = 0, slon = 0, slat = 0;
 const el = renderer.domElement;
 el.addEventListener('pointerdown', e => { down = true; sx = e.clientX; sy = e.clientY; slon = lon; slat = lat; });
 addEventListener('pointerup', () => down = false);
