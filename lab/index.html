@@ -40,7 +40,7 @@ camera.position.set(0, 1.6, 0);
 
 // Shape the picture like a real room: floor at your real standing height, walls and ceiling at the chosen room size.
 const EYE = 1.6;
-const SIZES = { cozy: [1.8, 0.9, 62], medium: [2.4, 1.2, 75], large: [3.0, 1.4, 90] }; // [wall distance m, ceiling above eyes m, picture height in degrees above/below eye level]
+const SIZES = { cozy: [1.4, 0.8, 52], medium: [2.4, 1.2, 75], large: [3.0, 1.4, 90] }; // [wall distance m, ceiling above eyes m, picture height in degrees above/below eye level]
 function roomGeometry(size) {
   const [WALL, CEIL, SPAN] = SIZES[size];
   const g = new THREE.SphereGeometry(1, 192, 128);
