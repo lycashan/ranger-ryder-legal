@@ -11,6 +11,7 @@
   h1{font-size:26px;margin:0 0 12px}
   .btn{display:inline-block;background:#c9a24a;color:#120c08;font-size:40px;font-weight:bold;padding:24px 70px;border-radius:16px;text-decoration:none;border:none;cursor:pointer;margin:6px}
   .small{font-size:20px;padding:12px 30px;background:#5a4422;color:#f3e2c0}
+  .sz.on{background:#c9a24a;color:#120c08}
   #msg{font-size:22px;margin-top:10px;min-height:28px}
 </style>
 </head>
@@ -18,7 +19,7 @@
 <div id="view"></div>
 <div id="bar">
   <h1>Billy Ryder's Reinvention Lab</h1>
-  <button id="enter" class="btn">ENTER LAB</button><br><div style="font-size:22px;margin:4px">To leave the lab: pinch once (or pull the trigger).</div>
+  <button id="enter" class="btn">ENTER LAB</button><br><div id="sizes" style="margin:6px">Room size: <button class="btn small sz" data-s="cozy">Cozy</button><button class="btn small sz" data-s="medium">Medium</button><button class="btn small sz" data-s="large">Large</button></div><div style="font-size:22px;margin:4px">To leave the lab: pinch once (or pull the trigger).</div>
   <a class="btn small" href="Reinvention_Lab2_360_sharp.jpg" download="Reinvention_Lab2_360_sharp.jpg">Save picture</a>
   <div id="msg"></div>
 </div>
@@ -36,20 +37,29 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.01, 100);
 camera.position.set(0, 1.6, 0);
 
-// Shape the picture like a real room: floor 1.6 m below your eyes, ceiling 1.4 m above, walls about 3 m away.
-const EYE = 1.6, CEIL = 1.4, WALL = 3.0;
-const geo = new THREE.SphereGeometry(1, 192, 128);
-const pos = geo.attributes.position, v = new THREE.Vector3();
-for (let i = 0; i < pos.count; i++) {
-  v.fromBufferAttribute(pos, i).normalize();
-  let d = WALL;
-  if (v.y < -1e-4) d = Math.min(d, EYE / -v.y);
-  if (v.y > 1e-4) d = Math.min(d, CEIL / v.y);
-  v.multiplyScalar(d);
-  pos.setXYZ(i, v.x, v.y, v.z);
+// Shape the picture like a real room: floor at your real standing height, walls and ceiling at the chosen room size.
+const EYE = 1.6;
+const SIZES = { cozy: [1.8, 0.9], medium: [2.4, 1.2], large: [3.0, 1.4] }; // [wall distance, ceiling above eyes] in meters
+function roomGeometry(size) {
+  const [WALL, CEIL] = SIZES[size];
+  const g = new THREE.SphereGeometry(1, 192, 128);
+  const pos = g.attributes.position, v = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i).normalize();
+    let d = WALL;
+    if (v.y < -1e-4) d = Math.min(d, EYE / -v.y);
+    if (v.y > 1e-4) d = Math.min(d, CEIL / v.y);
+    v.multiplyScalar(d);
+    pos.setXYZ(i, v.x, v.y, v.z);
+  }
+  g.computeBoundingSphere();
+  g.scale(-1, 1, 1); // see the picture from inside
+  return g;
 }
-geo.computeBoundingSphere();
-geo.scale(-1, 1, 1); // see the picture from inside
+let size = 'cozy';
+try { size = localStorage.getItem('labSize') || 'cozy'; } catch (e) {}
+if (!SIZES[size]) size = 'cozy';
+const geo = roomGeometry(size);
 const tex = new THREE.TextureLoader().load('Reinvention_Lab2_360_sharp.jpg', () => { window.labLoaded = true; });
 tex.colorSpace = THREE.SRGBColorSpace;
 tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -57,6 +67,14 @@ const sphere = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({map:tex}));
 sphere.position.set(0, 1.6, 0);
 sphere.rotation.y = -Math.PI/2; // sign in front of you
 scene.add(sphere);
+
+function showSize() { document.querySelectorAll('.sz').forEach(b => b.classList.toggle('on', b.dataset.s === size)); }
+document.querySelectorAll('.sz').forEach(b => b.addEventListener('click', () => {
+  size = b.dataset.s;
+  try { localStorage.setItem('labSize', size); } catch (e) {}
+  sphere.geometry.dispose(); sphere.geometry = roomGeometry(size); showSize();
+}));
+showSize();
 
 // look around with mouse or finger (outside the headset)
 let lon = -90, lat = 0, down = false, sx = 0, sy = 0, slon = 0, slat = 0;
